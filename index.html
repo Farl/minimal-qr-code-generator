@@ -218,6 +218,66 @@
 
     <script>
       let qr = null;
+
+      function buildBorderedCanvas(sourceElement, size, border) {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        canvas.width = size + border * 2;
+        canvas.height = size + border * 2;
+
+        // Keep the quiet zone white for broader scanner compatibility.
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(sourceElement, border, border, size, size);
+
+        return canvas;
+      }
+
+      function renderQRCodeToCanvas(options) {
+        const qrContainer = document.getElementById('qrcode');
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'fixed';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.top = '-9999px';
+        tempContainer.style.pointerEvents = 'none';
+        document.body.appendChild(tempContainer);
+
+        new QRCode(tempContainer, {
+          text: options.text,
+          width: options.size,
+          height: options.size,
+          colorDark: options.darkColor,
+          colorLight: options.lightColor,
+          correctLevel: options.correctLevel
+        });
+
+        const finalizeRender = (sourceElement) => {
+          const borderedCanvas = buildBorderedCanvas(sourceElement, options.size, options.border);
+          qrContainer.innerHTML = '';
+          qrContainer.appendChild(borderedCanvas);
+          qr = borderedCanvas;
+          document.body.removeChild(tempContainer);
+          document.querySelector('.download-btn').style.display = 'block';
+        };
+
+        const waitForSource = () => {
+          const sourceElement = tempContainer.querySelector('canvas, img');
+          if (!sourceElement) {
+            requestAnimationFrame(waitForSource);
+            return;
+          }
+
+          if (sourceElement.tagName === 'IMG' && !sourceElement.complete) {
+            sourceElement.addEventListener('load', () => finalizeRender(sourceElement), { once: true });
+            return;
+          }
+
+          finalizeRender(sourceElement);
+        };
+
+        waitForSource();
+      }
       
       function generateQR() {
         const text = document.getElementById('text-input').value;
@@ -234,10 +294,9 @@
         const quietZone = parseInt(quietZoneInput.value, 10);
 
         qrContainer.style.backgroundColor = '#ffffff';
-        qrContainer.style.padding = `${quietZone}px`;
-        qrContainer.style.minHeight = `${sizeInput.value}px`;
+        qrContainer.style.padding = '0';
         
-        const size = parseInt(sizeInput.value);
+        const size = parseInt(sizeInput.value, 10);
         const darkColor = darkColorInput.value;
         
         // Map error correction levels
@@ -248,40 +307,22 @@
           'H': QRCode.CorrectLevel.H
         };
         
-        qr = new QRCode(qrContainer, {
-          text: text,
-          width: size,
-          height: size,
-          colorDark: darkColor,
-          colorLight: lightColorInput.value,
-          correctLevel: errorLevelMap[errorLevelInput.value]
+        qrContainer.style.minHeight = `${size + quietZone * 2}px`;
+
+        renderQRCodeToCanvas({
+          text,
+          size,
+          darkColor,
+          lightColor: lightColorInput.value,
+          correctLevel: errorLevelMap[errorLevelInput.value],
+          border: quietZone
         });
-        
-        document.querySelector('.download-btn').style.display = 'block';
       }
 
       function downloadQR() {
         if (!qr) return;
-        
-        const originalCanvas = document.querySelector('#qrcode canvas');
-        if (!originalCanvas) return;
 
-        const border = parseInt(document.getElementById('quiet-zone').value, 10);
-        
-        const newCanvas = document.createElement('canvas');
-        const newCtx = newCanvas.getContext('2d');
-        
-        newCanvas.width = originalCanvas.width + border * 2;
-        newCanvas.height = originalCanvas.height + border * 2;
-
-        // Keep the quiet zone white for broader scanner compatibility.
-        newCtx.fillStyle = '#ffffff';
-        newCtx.fillRect(0, 0, newCanvas.width, newCanvas.height);
-        
-        // Draw the QR code in the center
-        newCtx.drawImage(originalCanvas, border, border);
-        
-        const image = newCanvas.toDataURL("image/png");
+        const image = qr.toDataURL("image/png");
         const link = document.createElement('a');
         
         link.href = image;
