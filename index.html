@@ -16,17 +16,29 @@
         justify-content: center;
         align-items: center;
         background: #f7f7f7;
-        padding: 20px;
+        padding: 16px;
       }
 
       .container {
         background: white;
-        padding: 2rem;
+        padding: 1.5rem;
         border-radius: 12px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         width: 100%;
-        max-width: 400px;
+        max-width: 920px;
         transition: all 0.3s ease;
+      }
+
+      .app-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.9fr);
+        gap: 1.25rem;
+        align-items: start;
+      }
+
+      .controls-panel,
+      .preview-panel {
+        min-width: 0;
       }
 
       .container:hover {
@@ -37,17 +49,23 @@
       h1 {
         font-size: 1.5rem;
         color: #333;
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.35rem;
         font-weight: 500;
       }
 
+      .subtitle {
+        color: #666;
+        font-size: 0.95rem;
+        margin-bottom: 1.25rem;
+      }
+
       .input-group {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
       }
 
       input {
         width: 100%;
-        padding: 0.8rem;
+        padding: 0.75rem;
         border: 2px solid #eee;
         border-radius: 6px;
         font-size: 1rem;
@@ -61,7 +79,7 @@
 
       button {
         width: 100%;
-        padding: 0.8rem;
+        padding: 0.75rem;
         background: #333;
         color: white;
         border: none;
@@ -79,15 +97,48 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-top: 1.5rem;
         padding: 0;
         background: #f7f7f7;
         border-radius: 6px;
-        min-height: 148px;
+        min-height: 220px;
+        width: 100%;
+        overflow: hidden;
+      }
+
+      #qrcode img {
+        display: block;
+        max-width: min(100%, 320px);
+        height: auto;
+        user-select: auto;
+        -webkit-user-drag: element;
+      }
+
+      .preview-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+      }
+
+      .preview-card {
+        background: #fafafa;
+        border: 1px solid #ededed;
+        border-radius: 10px;
+        padding: 1rem;
+      }
+
+      .preview-label {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0.75rem;
+      }
+
+      .action-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
       }
 
       .download-btn {
-        margin-top: 1rem;
         background: #f7f7f7;
         color: #333;
       }
@@ -96,11 +147,20 @@
         background: #eee;
       }
 
+      .copy-btn {
+        background: #f7f7f7;
+        color: #333;
+      }
+
+      .copy-btn:hover {
+        background: #eee;
+      }
+
       .parameter-group {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
       }
 
       .parameter-group label {
@@ -112,7 +172,7 @@
 
       select {
         width: 100%;
-        padding: 0.6rem;
+        padding: 0.65rem;
         border: 2px solid #eee;
         border-radius: 6px;
         font-size: 1rem;
@@ -151,69 +211,108 @@
         border: none;
         border-radius: 4px;
       }
+
+      @media (max-width: 760px) {
+        body {
+          padding: 12px;
+          align-items: flex-start;
+        }
+
+        .container {
+          padding: 1rem;
+        }
+
+        .app-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .parameter-group {
+          grid-template-columns: 1fr;
+          gap: 0.75rem;
+        }
+
+        #qrcode {
+          min-height: 180px;
+        }
+      }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   </head>
   <body>
     <div class="container">
-      <h1>QR Code Generator</h1>
-      <div class="input-group">
-        <input type="text" id="text-input" placeholder="Enter text or URL" autofocus>
-      </div>
-      
-      <div class="parameter-group">
-        <div>
-          <label>QR Code Size</label>
-          <select id="size-input">
-            <option value="128">Small (128x128)</option>
-            <option value="256" selected>Medium (256x256)</option>
-            <option value="512">Large (512x512)</option>
-          </select>
-        </div>
-        <div>
-          <label>Error Correction</label>
-          <select id="error-level">
-            <option value="L">Low (7%)</option>
-            <option value="M" selected>Medium (15%)</option>
-            <option value="Q">Quartile (25%)</option>
-            <option value="H">High (30%)</option>
-          </select>
-        </div>
-      </div>
+      <div class="app-layout">
+        <div class="controls-panel">
+          <h1>QR Code Generator</h1>
+          <p class="subtitle">Generate, preview, copy, and download a QR code with a scanner-friendly quiet zone.</p>
+          <div class="input-group">
+            <input type="text" id="text-input" placeholder="Enter text or URL" autofocus>
+          </div>
+          
+          <div class="parameter-group">
+            <div>
+              <label>QR Code Size</label>
+              <select id="size-input">
+                <option value="128">Small (128x128)</option>
+                <option value="192" selected>Medium (192x192)</option>
+                <option value="256">Large (256x256)</option>
+                <option value="384">XL (384x384)</option>
+              </select>
+            </div>
+            <div>
+              <label>Error Correction</label>
+              <select id="error-level">
+                <option value="L">Low (7%)</option>
+                <option value="M" selected>Medium (15%)</option>
+                <option value="Q">Quartile (25%)</option>
+                <option value="H">High (30%)</option>
+              </select>
+            </div>
+          </div>
 
-      <div class="parameter-group">
-        <div>
-          <label>Dark Color</label>
-          <div class="color-picker-group">
-            <input type="color" id="dark-color" value="#000000">
-            <div id="dark-color-preview" class="color-preview"></div>
+          <div class="parameter-group">
+            <div>
+              <label>Dark Color</label>
+              <div class="color-picker-group">
+                <input type="color" id="dark-color" value="#000000">
+                <div id="dark-color-preview" class="color-preview"></div>
+              </div>
+            </div>
+            <div>
+              <label>Light Color</label>
+              <div class="color-picker-group">
+                <input type="color" id="light-color" value="#ffffff">
+                <div id="light-color-preview" class="color-preview"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="parameter-group">
+            <div>
+              <label>White Border</label>
+              <select id="quiet-zone">
+                <option value="0">None</option>
+                <option value="12">Small (12px)</option>
+                <option value="20" selected>Medium (20px)</option>
+                <option value="32">Large (32px)</option>
+                <option value="48">Extra Large (48px)</option>
+              </select>
+            </div>
+          </div>
+
+          <button onclick="generateQR()">Generate QR Code</button>
+        </div>
+
+        <div class="preview-panel">
+          <div class="preview-card">
+            <div class="preview-label">Preview image</div>
+            <div id="qrcode"></div>
+          </div>
+          <div class="action-row">
+            <button class="copy-btn" onclick="copyQRImage()" style="display: none;">Copy QR Code</button>
+            <button class="download-btn" onclick="downloadQR()" style="display: none;">Download QR Code</button>
           </div>
         </div>
-        <div>
-          <label>Light Color</label>
-          <div class="color-picker-group">
-            <input type="color" id="light-color" value="#ffffff">
-            <div id="light-color-preview" class="color-preview"></div>
-          </div>
-        </div>
       </div>
-
-      <div class="parameter-group">
-        <div>
-          <label>White Border</label>
-          <select id="quiet-zone">
-            <option value="0">None</option>
-            <option value="12">Small (12px)</option>
-            <option value="20" selected>Medium (20px)</option>
-            <option value="32">Large (32px)</option>
-            <option value="48">Extra Large (48px)</option>
-          </select>
-        </div>
-      </div>
-
-      <button onclick="generateQR()">Generate QR Code</button>
-      <div id="qrcode"></div>
-      <button class="download-btn" onclick="downloadQR()" style="display: none;">Download QR Code</button>
     </div>
 
     <script>
@@ -234,7 +333,7 @@
         return canvas;
       }
 
-      function renderQRCodeToCanvas(options) {
+      function renderQRCodeToImage(options) {
         const qrContainer = document.getElementById('qrcode');
         const tempContainer = document.createElement('div');
         tempContainer.style.position = 'fixed';
@@ -254,10 +353,16 @@
 
         const finalizeRender = (sourceElement) => {
           const borderedCanvas = buildBorderedCanvas(sourceElement, options.size, options.border);
+          const qrImage = document.createElement('img');
+          qrImage.src = borderedCanvas.toDataURL('image/png');
+          qrImage.alt = 'Generated QR code';
+          qrImage.width = borderedCanvas.width;
+          qrImage.height = borderedCanvas.height;
           qrContainer.innerHTML = '';
-          qrContainer.appendChild(borderedCanvas);
-          qr = borderedCanvas;
+          qrContainer.appendChild(qrImage);
+          qr = qrImage.src;
           document.body.removeChild(tempContainer);
+          document.querySelector('.copy-btn').style.display = 'block';
           document.querySelector('.download-btn').style.display = 'block';
         };
 
@@ -309,7 +414,7 @@
         
         qrContainer.style.minHeight = `${size + quietZone * 2}px`;
 
-        renderQRCodeToCanvas({
+        renderQRCodeToImage({
           text,
           size,
           darkColor,
@@ -322,14 +427,23 @@
       function downloadQR() {
         if (!qr) return;
 
-        const image = qr.toDataURL("image/png");
         const link = document.createElement('a');
         
-        link.href = image;
+        link.href = qr;
         link.download = 'qrcode.png';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+      }
+
+      async function copyQRImage() {
+        if (!qr || !navigator.clipboard || !window.ClipboardItem) return;
+
+        const response = await fetch(qr);
+        const blob = await response.blob();
+        await navigator.clipboard.write([
+          new ClipboardItem({ [blob.type]: blob })
+        ]);
       }
 
       // Generate QR code on Enter key press
