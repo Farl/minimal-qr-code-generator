@@ -80,7 +80,7 @@
         justify-content: center;
         align-items: center;
         margin-top: 1.5rem;
-        padding: 1rem;
+        padding: 0;
         background: #f7f7f7;
         border-radius: 6px;
         min-height: 148px;
@@ -198,6 +198,19 @@
         </div>
       </div>
 
+      <div class="parameter-group">
+        <div>
+          <label>White Border</label>
+          <select id="quiet-zone">
+            <option value="0">None</option>
+            <option value="12">Small (12px)</option>
+            <option value="20" selected>Medium (20px)</option>
+            <option value="32">Large (32px)</option>
+            <option value="48">Extra Large (48px)</option>
+          </select>
+        </div>
+      </div>
+
       <button onclick="generateQR()">Generate QR Code</button>
       <div id="qrcode"></div>
       <button class="download-btn" onclick="downloadQR()" style="display: none;">Download QR Code</button>
@@ -217,8 +230,12 @@
         const darkColorInput = document.getElementById('dark-color');
         const lightColorInput = document.getElementById('light-color');
         const errorLevelInput = document.getElementById('error-level');
+        const quietZoneInput = document.getElementById('quiet-zone');
+        const quietZone = parseInt(quietZoneInput.value, 10);
 
-        qrContainer.style.backgroundColor = lightColorInput.value;
+        qrContainer.style.backgroundColor = '#ffffff';
+        qrContainer.style.padding = `${quietZone}px`;
+        qrContainer.style.minHeight = `${sizeInput.value}px`;
         
         const size = parseInt(sizeInput.value);
         const darkColor = darkColorInput.value;
@@ -249,8 +266,7 @@
         const originalCanvas = document.querySelector('#qrcode canvas');
         if (!originalCanvas) return;
 
-        const lightColor = document.getElementById('light-color').value;
-        const border = 20; // 20px border
+        const border = parseInt(document.getElementById('quiet-zone').value, 10);
         
         const newCanvas = document.createElement('canvas');
         const newCtx = newCanvas.getContext('2d');
@@ -258,8 +274,8 @@
         newCanvas.width = originalCanvas.width + border * 2;
         newCanvas.height = originalCanvas.height + border * 2;
 
-        // Fill background with light color
-        newCtx.fillStyle = lightColor;
+        // Keep the quiet zone white for broader scanner compatibility.
+        newCtx.fillStyle = '#ffffff';
         newCtx.fillRect(0, 0, newCanvas.width, newCanvas.height);
         
         // Draw the QR code in the center
